@@ -1,0 +1,124 @@
+body{
+  background-color: #050505;
+  padding: 10px;
+  margin: 0px;
+}
+
+.CodeMirror-border {
+  width: 50%;
+  border: 0px solid #ddddff;
+  /*border-top: 1px solid rgba(255, 255, 255, 0.6);*/
+  border-radius: 5px;
+  /*background-color: #ddddff;*/
+  /*background-color: #666688;*/
+  background-color: transparent;
+  float: left;
+  margin: 5px;
+  position: fixed;
+
+  padding: 5px;
+}
+
+.CodeMirror {
+  border-radius: 10px;
+  padding: 15px 10px 20px 5px;
+  /*box-shadow: 0 0 30px -10px #000000 inset;*/
+  box-shadow: 0 0 10px -4px #000000 inset;
+  cursor: text;
+}
+
+.CodeMirror-scroll {
+  /*overflow-y: hidden;
+  overflow-x: auto;*/
+  height: auto;
+}
+
+#wrapcode .CodeMirror-border {
+  margin-top: 105px;
+}
+
+#wrapcmd .CodeMirror {
+  padding-left: 15px;
+}
+
+#wrapcmd .CodeMirror-scroll{
+  height: 28px;
+  overflow: hidden;
+}
+
+.CodeMirror-scrollbar {
+  /*display: none !important;*/
+}
+
+.CodeMirror-gutter {
+  height: auto !important;
+}
+
+#rightColumn {
+  float: left;
+  position: fixed;
+  left: 52%;
+  padding: 5px 15px 10px 0px;
+  overflow-y: auto;
+}
+
+#errorSpace {
+  float: left;
+  border-radius: 4px;
+  padding: 7px 10px;
+  box-shadow: 0 0 3px 0px #050505 inset;
+  color: #050505;
+  margin-top: 76px;
+  margin-left: 35px;
+  position: relative;
+  max-width: 615px;
+  z-index: 30;
+}
+
+#errorSpace pre {
+  font-family: Monaco,Consolas,"Lucida Console",monospace;
+  margin: 0px;
+  font-size: 13px;
+}
+
+.errorMessage {
+  background-color: rgba(204, 30, 30, 1);
+}
+
+.fileMessage {
+  background-color: #1E4ECC;
+}
+
+#compilationIndicator {
+  float: left;
+  font-family: Monaco,Consolas,"Lucida Console",monospace;
+  position: absolute;
+  margin-top: 80px;
+  margin-left: 25px;
+  color: #050505;
+}
+        
+
+
+#consoleSpace {
+}
+
+#consoleSpace pre {
+  background-color: #222;
+  border-radius: 15px;
+  padding: 14px 20px;
+  margin: 5px;
+  color: #fff;
+  font-family: Monaco,Consolas,"Lucida Console",monospace;
+  font-size: 13px;
+  line-height: 18px;
+  float: left;
+
+  white-space: pre;           /* CSS 2.0 */
+  white-space: pre-wrap;      /* CSS 2.1 */
+  white-space: -pre-wrap;     /* Opera 4-6 */
+  white-space: -o-pre-wrap;   /* Opera 7 */
+  white-space: -moz-pre-wrap; /* Mozilla */
+  white-space: -hp-pre-wrap;  /* HP Printers */
+  word-wrap: break-word;      /* IE 5+ */
+}

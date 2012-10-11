@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Hot&Cold Editor</title>
+    <link rel="stylesheet" href="style/lib/cm/codemirror.css">
+		<link rel="stylesheet" href="style/lib/cmcs/coffeescriptdark.css">
+		<link rel="stylesheet" href="style/editorstyle.css">
+    <script data-main="scripts/main" src="scripts/lib/requirejs/require-jquery.js"></script>
+  </head>
+  <body>
+    <form id="wrapcmd">
+      <div class="CodeMirror-border">
+        <textarea id="code2" name="code2"></textarea>
+      </div>
+    </form>
+      <div id="compilationIndicator">&middot;</div>
+    <div id="errorSpace" style="display: none">
+      <pre><!-- set by script --></pre>
+    </div>
+    <form id="wrapcode">
+      <div class="CodeMirror-border">        
+        <textarea id="code" name="code" autofocus="autofocus"></textarea>        
+      </div>
+    </form>
+
+    <div id="rightColumn">
+      <div id="consoleSpace"></div>
+    </div>       
+  </body>
+</html>
