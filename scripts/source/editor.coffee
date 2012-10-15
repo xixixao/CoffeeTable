@@ -458,5 +458,7 @@ require [
   else
     loadFromClient()
 
+  cmdline.setValue ":help"
+
   autosave()
   compileCode()
