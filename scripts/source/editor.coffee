@@ -14,6 +14,7 @@ require [
   sourceCompiled = false
   autoCompile = true
   lastHit = 0  
+  lastErrorType = ""
 
   AUTOSAVE_DELAY = 6000
   LAST_CODE = "lastEditedSourceCode"
@@ -90,7 +91,8 @@ require [
     $("#errorSpace").stop(true, true).fadeIn(200);
     
 
-  showErrorMessage = (message) ->
+  showErrorMessage = (type, message) ->
+    lastErrorType = type
     showImportantMessage "errorMessage", message
 
   showFileMessage = (message) ->
@@ -98,8 +100,9 @@ require [
 
   currentMessage = -> $("#errorSpace pre").text()
 
-  hideError = ->
-    $("#errorSpace").fadeOut(2000)
+  hideError = (types...) ->
+    if lastErrorType in types
+      $("#errorSpace").fadeOut(1000)
 
   dump = ->
     compileCode() unless sourceCompiled
@@ -112,7 +115,7 @@ require [
     source = $.trim cmdline.getValue()
     return if source.length == 0
     timeline.push source
-    #hideError()
+    hideError "command", "runtime"
     try
       if pref = source.match /^(< |:)/
         source = source[pref[0].length..]
@@ -134,7 +137,7 @@ require [
           else if pc "load"        then loadFromClient RegexUtil.param match
           else if sc "close"       then exitCurrentCode()
           else if pc "delete"      then removeFromClient RegexUtil.param match
-          else if sc "modes"       then displayModes()
+          else if sc "modes", "m"  then displayModes()
           else if pc "mode"        then setMode RegexUtil.param match
           #else if match = source.match /^\s*(wipe\sall\ssaved)\b\s*/
             #wipeClient()
@@ -149,9 +152,9 @@ require [
         try        
           log execute compiledJS + command
         catch error
-          showErrorMessage "Runtime: " + error
+          showErrorMessage "runtime", "Runtime: " + error
     catch error
-      showErrorMessage "Command Line: " + error.message
+      showErrorMessage "command", "Command Line: " + error.message
 
   modes =
     CoffeeScript: 
@@ -229,9 +232,9 @@ require [
     compiledJS = ''
     try
       compiledJS = compiler.compile source, getCompilerOptions()
-      hideError()
+      hideError "compiler", "runtime"
     catch error
-      showErrorMessage "Compiler: " + error.message
+      showErrorMessage "compiler", "Compiler: " + error.message
     sourceCompiled = true
     finish()
 
@@ -326,7 +329,10 @@ require [
     for snippet in table.split ";"
       [name, lines] = snippet.split ","
       output += "#{name}, lines: #{lines}\n" unless name == UNNAMED_CODE
-    log output
+    if output == ""
+      log "No files saved"
+    else
+      log output
 
   CodeMirror.keyMap.commandLine =
     "Up": "doNothing"
@@ -385,7 +391,7 @@ require [
   toggle / t    - Toggle autocompilation
   link / l      - Create a link with current source code
   mode &lt;name>   - Switch to a different compiler
-  modes         - Show all available modes
+  modes / m     - Show all available modes
   save &lt;name>   - Save current code locally under name
   load &lt;name>   - Load code from local storage under name
   delete &lt;name> - Remove code from local storage
@@ -400,7 +406,8 @@ require [
   # Initialize CodeMirror
   # ---------------------
 
-  # References to active line
+  # References to active line  
+
   hlLine = null
 
   editor = CodeMirror.fromTextArea $("#code").get(0),
@@ -457,6 +464,8 @@ require [
     loadConsole src
   else
     loadFromClient()
+
+  cmdline.setValue ":help"
 
   autosave()
   compileCode()
