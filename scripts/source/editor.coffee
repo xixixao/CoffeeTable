@@ -6,7 +6,8 @@ require [
   'compilers/icedcoffeescript/compiler'
   'cs!source/TimeLine'
   'cs!source/RegexUtil'
-], (jc_, jac_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil) ->          
+  'source/jsDump'
+], (jc_, jac_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
   sourceFragment = "try:"
   compiledJS = ''
   compiler = null
@@ -15,6 +16,7 @@ require [
   autoCompile = true
   lastHit = 0  
   lastErrorType = ""
+  currentMode = ""
 
   AUTOSAVE_DELAY = 6000
   LAST_CODE = "lastEditedSourceCode"
@@ -34,7 +36,7 @@ require [
 
   log = (input...) ->  
   #return false for i in input when not (typeof i in ["string", "number", "array", "object"])
-    input = (format i ? "Nothing" for i in input)
+    input = (jsDump.parse i ? "Nothing" for i in input)
     message = input.join ", "
     #message = input
     if message.length > 0
@@ -109,7 +111,7 @@ require [
     if compiledJS
       log compiledJS 
     else 
-      showErrorMessage "Fix: '#{currentMessage()}' first"
+      showErrorMessage "compiler", "Fix: '#{currentMessage()}' first"
 
   compileAndRun = ->
     source = $.trim cmdline.getValue()
@@ -132,7 +134,7 @@ require [
           if sc "dump", "d" then dump()
           else if sc "erase", "e"  then eraseMessages()
           else if sc "link", "l"   then saveToAdress()
-          else if sc "toggle", "t" then autoCompile = not autoCompile
+          else if sc "toggle", "t" then toggleAutoCompilation()
           else if pc "save"        then switchCurrentCode RegexUtil.param match
           else if pc "load"        then loadFromClient RegexUtil.param match
           else if sc "close"       then exitCurrentCode()
@@ -188,6 +190,10 @@ require [
   displayModes = ->
     log modesList()    
 
+  setNewMode = (name) ->
+    unless name is currentMode
+      setMode name
+
   setMode = (name) ->
     mode = modes[name]
     if mode?
@@ -204,11 +210,16 @@ require [
         cmdline.setOption "mode", id
         mode.init?()
         log "#{name} compiler loaded"
+        currentMode = name
         compileCode()
       , (error) ->
         log "#{name} loading failed"
     else
       log "Wrong mode name, choose from:\n\n" + modesList()
+
+  toggleAutoCompilation = ->
+    autoCompile = not autoCompile    
+    log "Autocompilation switched " + if autoCompile then "on" else "off"
 
   getCompilerOptions = -> 
     $.extend {}, compilerOptions
@@ -230,10 +241,12 @@ require [
     start()
     source = editor.getValue()
     compiledJS = ''
+    saveCurrent()
     try
       compiledJS = compiler.compile source, getCompilerOptions()
       hideError "compiler", "runtime"
     catch error
+      log "compiler error", error
       showErrorMessage "compiler", "Compiler: " + error.message
     sourceCompiled = true
     finish()
@@ -243,7 +256,7 @@ require [
 
 
   execute = (code) ->
-    console.log compiler.preExecute?(code) ? code
+    #console.log compiler.preExecute?(code) ? code
     eval compiler.preExecute?(code) ? code
 
   # Listen for changes and recompile.
@@ -251,7 +264,7 @@ require [
     sourceCompiled = false
     sourceChanged = true
     return unless autoCompile
-    DELAY = 500
+    DELAY = 700
     lastHit = getTime()
     await setTimeout defer(), 2 * DELAY
     if getTime() - lastHit > DELAY
@@ -270,12 +283,14 @@ require [
     return
 
   saveCurrent = ->
-    value = editor.getValue()
-    valueLines = (value.split "\n").length
+    source = editor.getValue()
+    value = source: source, mode: currentMode
+    valueLines = (source.split "\n").length
     exists = false
     ammendClientTable saveName, "#{saveName},#{valueLines}"
+    $.cookie.json = true
     $.cookie saveName, value, expires: 365
-    $.cookie LAST_CODE, saveName, expires: 365
+    $.cookie LAST_CODE, saveName, expires: 365    
 
   removeFromClient = (name) ->
     return unless name?
@@ -285,6 +300,7 @@ require [
 
   ammendClientTable = (exclude, addition = null) ->
     table = []
+    $.cookie.json = false
     oldTable = $.cookie BROWSE_COOKIE
     if oldTable?
       for pair in oldTable.split ";"
@@ -293,17 +309,20 @@ require [
     table.push addition if addition
     table = table.join ";"
     table = null if table.length == 0
-    console.log "changed #{exclude} saving " + table
+    #console.log "changed #{exclude} saving " + table
     $.cookie BROWSE_COOKIE, table, expires: 365
 
   loadFromClient = (name) ->
+    $.cookie.json = true
     name = $.cookie LAST_CODE unless name?
     return unless name?
-    console.log "loading " + name + " is " + $.cookie name
+    #console.log "loading " + name + " is " + $.cookie name
     stored = $.cookie name
     if stored?
       saveName = name
-      editor.setValue stored
+      {source, mode} = stored
+      setNewMode mode
+      editor.setValue source
       showFileMessage "#{saveName} loaded" if saveName != UNNAMED_CODE
     else
       showFileMessage "There is no #{saveName}" if saveName != UNNAMED_CODE
@@ -321,14 +340,13 @@ require [
     showFileMessage "Working on #{saveName}"
 
   displayClient = ->
+    $.cookie.json = false
     table = $.cookie BROWSE_COOKIE
-    unless table? and table.length > 0
-      log null
-      return
     output = ""
-    for snippet in table.split ";"
-      [name, lines] = snippet.split ","
-      output += "#{name}, lines: #{lines}\n" unless name == UNNAMED_CODE
+    if table? and table.length > 0            
+      for snippet in table.split ";"
+        [name, lines] = snippet.split ","
+        output += "#{name}, lines: #{lines}\n" unless name == UNNAMED_CODE
     if output == ""
       log "No files saved"
     else
@@ -364,9 +382,14 @@ require [
   
 
   resizeEditor = (e) ->
-    $('#wrapcode .CodeMirror-scroll').css "max-height", ($(window).height() - 175) + "px"
-    $('#rightColumn').css "max-height", ($(window).height() - 35) + "px"
-    setMaxPreWidth $('#consoleSpace pre')
+    winSize = w: $(window).width(), h: $(window).height()
+    column = winSize.w / 2
+    $('.CodeMirror-border').css "width", (column - 10) + "px"
+    $('#wrapcode .CodeMirror-scroll').css "max-height", (winSize.h - 175) + "px"
+    $('#rightColumn').css "left", (column) + "px"
+    $('#rightColumn').css "width", (column - 35) + "px"
+    $('#rightColumn').css "max-height", (winSize.h - 35) + "px"
+    setMaxPreWidth $('#consoleSpace pre')    
 
   setMaxPreWidth = ($pre) ->
     $pre.css "max-width", ($(window).width() * 0.5 - 95) + "px"  
@@ -450,12 +473,20 @@ require [
   $(window).resize resizeEditor
     #wipe all saved - Wipes local storage
 
+  # Autosave
+  # --------
+  # Apart from compilation also on closing window
+  $(window).unload ->
+    saveCurrent()
+
+
   # Start Editing
   # ---------------------
 
   # Set a default compiler
   compiler = IcedCoffeeScript
   compilerOptions = bare: on
+  currentMode = "IcedCoffeeScript"
 
   # If source code is included in location.hash, display it.
   hash = decodeURIComponent window.location.hash.replace(/^#/, '')
@@ -467,5 +498,5 @@ require [
 
   cmdline.setValue ":help"
 
-  autosave()
+  #autosave()
   compileCode()
