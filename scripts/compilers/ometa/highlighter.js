@@ -356,7 +356,7 @@ CodeMirror.defineMode("ometa", function(config, parserConfig) {
       else return lexical.indented + (closing ? 0 : indentUnit);
     },
 
-    electricChars: ":{}"
+    //electricChars: ""
   };
 });
 
