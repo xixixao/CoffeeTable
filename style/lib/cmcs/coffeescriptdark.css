@@ -87,6 +87,12 @@ div.CodeMirror-selected { background: #303251; }
   color: #88EEFF;
 }
 
+
+/* JavaScript */
+.cm-s-default span.cm-property {
+  color: #35b5FF;
+}
+
 .cm-s-default pre.activeline {
   background-color: rgba(255, 255, 255, 0.02);
   border-radius: 3px;
