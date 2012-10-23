@@ -49,49 +49,10 @@ require [
       result += string
     result
 
-  format = (input) ->
-    if input == undefined
-      "undefined"
-    else if input == null
-      "null"
-    else if Array.isArray input
-      input = (format a for a in input)
-      input = input.join ', '
-      "[" + input + "]"
-    else if typeof input == 'object'
-      if $.isEmptyObject input
-        '{}'
-      else
-        MAX_SINGLE_LINE = 50
-        SEP_LEN = 4
-        totalLen = 0
-        maxKeyLen = 0
-        for key, val of input
-          if key?
-            input[key] = val = format val
-            totalLen += key.length + val.length + SEP_LEN
-        maxKeyLen = Math.max(maxKeyLen, key.length)
-        MAX_KEY_INDENT = 10
-        maxKeyLen = Math.min(maxKeyLen, MAX_KEY_INDENT)
-        if totalLen > MAX_SINGLE_LINE
-          output = "\n"
-          for key, val of input
-            if key?
-              output += key + ": " + (repeat " ", (maxKeyLen + 1 - key.length)) + val + "\n"
-          output
-        else
-          "{" + ((key + ": " + val for key, val of input).join ", ") + "}"
-    else if input == ''
-      '""'
-    else
-      input
-
-
   showImportantMessage = (type, message) ->
     $("#errorSpace").attr("class", type);
     $("#errorSpace pre").text(message);
     $("#errorSpace").stop(true, true).fadeIn(200);
-    
 
   showErrorMessage = (type, message) ->
     lastErrorType = type
