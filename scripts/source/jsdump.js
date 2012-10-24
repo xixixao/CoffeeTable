@@ -38,14 +38,15 @@ var jsDump;
   function join( pre, arr, post ){        
     var comma     = ',',
         inlineSep = jsDump.separator(false),
-        base      = jsDump.indent(),
-        inner     = jsDump.indent(1);
+        base      = jsDump.indent();        
+
 
     // Inline if short   
     var inline = size(arr, comma + inlineSep) < jsDump.lineLimit
-    var s = inline ? inlineSep : jsDump.separator(true) + inner;    
-    if( arr.join )
-      arr = arr.join( comma + s );
+    var s = inline ? inlineSep : jsDump.separator(true);
+    var inner = inline ? '' : jsDump.indent(1);
+    if( arr.join )      
+      arr = arr.join( comma + s + inner);
     if( !arr )
       return pre + post;
     return inline ? pre + arr + post : [ pre, inner + arr, base + post ].join(s);
@@ -164,7 +165,7 @@ var jsDump;
       object:function( map ){
         if (this._depth_ >= this.maxDepth) {
           this._depth_ = 1; // Reset for future use
-          throw new Error("Object nesting exceeded jsDump.maxDepth (" + jsDump.maxDepth + ")");
+          throw new Error("Object nesting exceeded jsDump.maxDepth (" + jsDump.maxDepth + ")");          
         }
         var ret = [ ];
         this.up();
