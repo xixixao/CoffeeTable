@@ -4,7 +4,7 @@ require [
   'lib/cm/codemirror'
   'cs!compilers/icedcoffeescript/highlighter'
   'compilers/icedcoffeescript/compiler'
-  'cs!source/TimeLine'
+  'cs!source/UniqueTimeLine'
   'cs!source/RegexUtil'
   'source/jsDump'
 ], (jc_, jac_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
@@ -173,7 +173,7 @@ require [
         compilerOptions = mode.options
         editor.setOption "mode", id
         cmdline.setOption "mode", id
-        mode.init?()
+        mode.init?()        
         log "#{name} compiler loaded"
         currentMode = name
         compileCode()
@@ -211,7 +211,7 @@ require [
       compiledJS = compiler.compile source, getCompilerOptions()
       hideError "compiler", "runtime"
     catch error
-      log "compiler error", error
+      #log "compiler error", error
       showErrorMessage "compiler", "Compiler: " + error.message
     sourceCompiled = true
     finish()
@@ -251,8 +251,9 @@ require [
   fileCookie = (name, value) ->
     $.cookie.json = true
     passedValue = if value? then [value, expires: 365] else []
-    $.cookie cookieFilePrefix + name, passedValue...
+    res = $.cookie cookieFilePrefix + name, passedValue...
     $.cookie.json = false
+    res
 
   saveCurrent = ->
     source = editor.getValue()
@@ -270,8 +271,7 @@ require [
 
   loadTimeline = ->
     $.cookie.json = true
-    timeline.from ($.cookie TIMELINE_COOKIE) ? []
-    log timeline.elems
+    timeline.from ($.cookie TIMELINE_COOKIE) ? []    
     $.cookie.json = false
 
   removeFromClient = (name) ->
@@ -300,7 +300,7 @@ require [
     stored = fileCookie name
     if stored?
       saveName = name
-      {source, mode} = stored
+      {source, mode} = stored      
       setNewMode mode
       editor.setValue source
       showFileMessage "#{saveName} loaded" if saveName != UNNAMED_CODE
