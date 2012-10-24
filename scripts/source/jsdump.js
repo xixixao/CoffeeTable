@@ -26,6 +26,7 @@ var jsDump;
   function literal( o ){
     return o + '';
   }
+  //TODO: add the indentation size so this is perfect
   function size( arr, sep ) {  
     if( !arr || !arr[0] ) return 0;
     var sepLength = sep.length;
@@ -33,6 +34,8 @@ var jsDump;
     for( var i = 1; i < arr.length; i++ ){
       length += sepLength + arr[i].length;
     }
+    console.log(array);
+    console.log(length);
     return length;
   }
   function join( pre, arr, post ){        
@@ -115,7 +118,7 @@ var jsDump;
       }
       return type;
     },
-    lineLimit: 30,
+    lineLimit: 80,
     separator:function(multiline){      
       return this.multiline && multiline ? this.HTML ? '<br />' : '\n' : this.HTML ? '&nbsp;' : ' ';
     },
