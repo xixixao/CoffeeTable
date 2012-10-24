@@ -366,12 +366,9 @@ require [
   setMaxPreWidth = ($pre) ->
     $pre.css "max-width", ($(window).width() * 0.5 - 95) + "px"  
 
-    # Load the console with a string of CoffeeScript.
-  loadConsole = (coffee) ->
-    editor.setValue(editor.getValue() + coffee)
-    compileCode()
-    false
-
+    # Load the editor with a string of CoffeeScript.
+  loadWith = (coffee) ->
+    editor.setValue(editor.getValue() + coffee)        
 
   saveToAdress = () ->
     source = editor.getValue()
@@ -464,7 +461,7 @@ require [
   hash = decodeURIComponent window.location.hash.replace(/^#/, '')
   if hash.indexOf(sourceFragment) == 0
     src = hash.substr sourceFragment.length
-    loadConsole src
+    loadWith src
   else
     loadFromClient()
 
@@ -474,4 +471,4 @@ require [
     cmdline.setValue ":help"
 
   #autosave()
-  compileCode()
+  #compileCode()
