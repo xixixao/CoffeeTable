@@ -38,3 +38,14 @@ define ->
     curr: ->
       if @now == @head then @temporary
       else @elems[@now]
+
+    newest: (n) ->
+      @elems[-n..]
+
+    from: (arr) ->
+      @elems = @elems.concat arr
+      @head = @elems.length
+      @goNewest()      
+
+    size: ->
+      @elems.length

@@ -19,10 +19,12 @@ require [
   currentMode = ""
 
   AUTOSAVE_DELAY = 6000
-  LAST_CODE = "lastEditedSourceCode"
+  LAST_CODE = "lastEditedSourceCodeCOOKIE"
   UNNAMED_CODE = "@unnamed"
+  TIMELINE_COOKIE = "timelineCOOKIE"
   sourceChanged = false
   saveName = UNNAMED_CODE
+  cookieFilePrefix = "TeaTableFile_";
 
   timeline = new TimeLine
 
@@ -65,7 +67,7 @@ require [
 
   hideError = (types...) ->
     if lastErrorType in types
-      $("#errorSpace").fadeOut(1000)
+      $("#errorSpace").fadeOut(700)
 
   dump = ->
     compileCode() unless sourceCompiled
@@ -109,11 +111,13 @@ require [
 
           break unless match?
           source = source[match[0].length..]
-          break if source.length == 0
+          break if source.length == 0  
+        saveTimeline()
       else
         command = compiler.compile source, getCompilerOptions()
         try        
           log execute compiledJS + command
+          saveTimeline()
         catch error
           showErrorMessage "runtime", "Runtime: " + error
     catch error
@@ -243,25 +247,41 @@ require [
     autosave()
     return
 
+
+  fileCookie = (name, value) ->
+    $.cookie.json = true
+    passedValue = if value? then [value, expires: 365] else []
+    $.cookie cookieFilePrefix + name, passedValue...
+    $.cookie.json = false
+
   saveCurrent = ->
     source = editor.getValue()
     value = source: source, mode: currentMode
     valueLines = (source.split "\n").length
     exists = false
     ammendClientTable saveName, "#{saveName},#{valueLines}"
+    fileCookie saveName, value
+    $.cookie LAST_CODE, saveName, expires: 365
+
+  saveTimeline = ->
     $.cookie.json = true
-    $.cookie saveName, value, expires: 365
-    $.cookie LAST_CODE, saveName, expires: 365    
+    $.cookie TIMELINE_COOKIE, timeline.newest(200), expires: 365
+    $.cookie.json = false
+
+  loadTimeline = ->
+    $.cookie.json = true
+    timeline.from ($.cookie TIMELINE_COOKIE) ? []
+    log timeline.elems
+    $.cookie.json = false
 
   removeFromClient = (name) ->
     return unless name?
-    $.cookie name, null, expires: 365
+    fileCookie saveName, null
     ammendClientTable name
     showFileMessage "#{name} deleted"
 
   ammendClientTable = (exclude, addition = null) ->
     table = []
-    $.cookie.json = false
     oldTable = $.cookie BROWSE_COOKIE
     if oldTable?
       for pair in oldTable.split ";"
@@ -273,12 +293,11 @@ require [
     #console.log "changed #{exclude} saving " + table
     $.cookie BROWSE_COOKIE, table, expires: 365
 
-  loadFromClient = (name) ->
-    $.cookie.json = true
+  loadFromClient = (name) ->    
     name = $.cookie LAST_CODE unless name?
     return unless name?
     #console.log "loading " + name + " is " + $.cookie name
-    stored = $.cookie name
+    stored = fileCookie name
     if stored?
       saveName = name
       {source, mode} = stored
@@ -286,7 +305,7 @@ require [
       editor.setValue source
       showFileMessage "#{saveName} loaded" if saveName != UNNAMED_CODE
     else
-      showFileMessage "There is no #{saveName}" if saveName != UNNAMED_CODE
+      showFileMessage "There is no #{name}" if name != UNNAMED_CODE
 
   exitCurrentCode = ->
     saveCurrent()
@@ -457,7 +476,10 @@ require [
   else
     loadFromClient()
 
-  cmdline.setValue ":help"
+  loadTimeline()
+
+  if timeline.size() < 20
+    cmdline.setValue ":help"
 
   #autosave()
   compileCode()
