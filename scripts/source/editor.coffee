@@ -1,5 +1,6 @@
 require [
   'lib/jquery/jquery.cookie'
+  'lib/jquery/jquery.total-storage'  
   'lib/jquery/jquery.animate-colors'
   'lib/cm/codemirror'
   'cs!compilers/icedcoffeescript/highlighter'
@@ -7,7 +8,7 @@ require [
   'cs!source/UniqueTimeLine'
   'cs!source/RegexUtil'
   'source/jsDump'
-], (jc_, jac_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
+], (jc_, jac_, jts, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
   sourceFragment = "try:"
   compiledJS = ''
   compiler = null
@@ -248,12 +249,8 @@ require [
     return
 
 
-  fileCookie = (name, value) ->
-    $.cookie.json = true
-    passedValue = if value? then [value, expires: 365] else []
-    res = $.cookie cookieFilePrefix + name, passedValue...
-    $.cookie.json = false
-    res
+  fileCookie = (name, value) ->    
+    $.totalStorage cookieFilePrefix + name, value
 
   saveCurrent = ->
     source = editor.getValue()
@@ -262,17 +259,13 @@ require [
     exists = false
     ammendClientTable saveName, "#{saveName},#{valueLines}"
     fileCookie saveName, value
-    $.cookie LAST_CODE, saveName, expires: 365
+    $.totalStorage LAST_CODE, saveName
 
   saveTimeline = ->
-    $.cookie.json = true
-    $.cookie TIMELINE_COOKIE, timeline.newest(200), expires: 365
-    $.cookie.json = false
+    $.totalStorage TIMELINE_COOKIE, timeline.newest(200)
 
   loadTimeline = ->
-    $.cookie.json = true
-    timeline.from ($.cookie TIMELINE_COOKIE) ? []    
-    $.cookie.json = false
+    timeline.from ($.totalStorage TIMELINE_COOKIE) ? []    
 
   removeFromClient = (name) ->
     return unless name?
@@ -282,7 +275,7 @@ require [
 
   ammendClientTable = (exclude, addition = null) ->
     table = []
-    oldTable = $.cookie BROWSE_COOKIE
+    oldTable = $.totalStorage BROWSE_COOKIE
     if oldTable?
       for pair in oldTable.split ";"
         [name, lines] = pair.split ","
@@ -291,12 +284,12 @@ require [
     table = table.join ";"
     table = null if table.length == 0
     #console.log "changed #{exclude} saving " + table
-    $.cookie BROWSE_COOKIE, table, expires: 365
+    $.totalStorage BROWSE_COOKIE, table
 
   loadFromClient = (name) ->    
-    name = $.cookie LAST_CODE unless name?
+    name = $.totalStorage LAST_CODE unless name?
     return unless name?
-    #console.log "loading " + name + " is " + $.cookie name
+    #console.log "loading " + name + " is " + $.totalStorage name
     stored = fileCookie name
     if stored?
       saveName = name
@@ -320,8 +313,7 @@ require [
     showFileMessage "Working on #{saveName}"
 
   displayClient = ->
-    $.cookie.json = false
-    table = $.cookie BROWSE_COOKIE
+    table = $.totalStorage BROWSE_COOKIE
     output = ""
     if table? and table.length > 0            
       for snippet in table.split ";"
