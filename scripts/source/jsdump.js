@@ -34,8 +34,6 @@ var jsDump;
     for( var i = 1; i < arr.length; i++ ){
       length += sepLength + arr[i].length;
     }
-    console.log(array);
-    console.log(length);
     return length;
   }
   function join( pre, arr, post ){        
