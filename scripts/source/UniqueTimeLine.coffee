@@ -66,7 +66,7 @@ define ->
           n = n.prev
         else
           break        
-      res
+      res.reverse()
 
     from: (arr) ->
       for e in arr
