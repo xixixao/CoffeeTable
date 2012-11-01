@@ -1,0 +1,42 @@
+meta DentParser {
+  blankLine      = ' '* nl | ' '+ end,
+  dent           = ' '* nl blankLine* ' '*:ss -> ss.length,
+  indent         = dent:d ?(this.topIndent() < d) -> this.indents.push(d),
+  dedent         = dent:d ?(this.topIndent() > d) -> this.countDedent(d)
+                 | empty ?(this.dedents > 0) -> {this.dedents--}
+                 | end
+                 | nl blankLine* ' '* end,
+  nl = '\n' pos:p {this.lineStart = p},
+  linePos = pos:p -> (p - this.lineStart)
+}
+
+DentParser.prototype.indents = [0]
+DentParser.prototype.dedents = 0
+DentParser.prototype.topIndent = function () {
+  return this.indents[this.indents.length - 1]
+}
+DentParser.prototype.countDedent = function (d) {
+  this.indents.pop();
+  while (this.topIndent() > d) {
+    this.indents.pop();
+    this.dedents++;
+  }
+  this.indents.push(d);
+}
+
+  
+ometa A <: DentParser {
+  text = <letter+>,
+  program = <text indent text indent text dedent text dedent>
+}
+                                                                 
+/*b = OMetaParser.matchAll(
+"ometa A extends B\
+  r = space\
+    asdsad", "grammar")*/
+c = A.matchAll(
+"ahoj\
+  basdsa\
+    asdsa\
+  sets\
+", "program");

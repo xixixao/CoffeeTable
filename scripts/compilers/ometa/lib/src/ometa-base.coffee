@@ -166,7 +166,7 @@ define ->
     _applyWithArgs: (rule, args...) ->
       ruleFn = this[rule]
       unless ruleFn?
-          throw 'tried to apply undefined rule "' + rule + '"'
+          throw 'tried to apply undefined super rule "' + rule + '"'
       ruleFnArity = ruleFn.length
       # prepend "extra" arguments in reverse order
       for idx in [args.length - 1..ruleFnArity] by -1
@@ -179,7 +179,7 @@ define ->
     @_superApplyWithArgs: (recv, rule, args...) ->
       ruleFn = @prototype[rule]
       unless ruleFn?
-          throw 'tried to apply undefined rule "' + rule + '"'
+          throw 'tried to apply undefined super rule "' + rule + '"'
       ruleFnArity = ruleFn.length
       # prepend "extra" arguments in reverse order
       for idx in [args.length - 1...ruleFnArity] by -1      
@@ -319,7 +319,7 @@ define ->
     _idxConsumedBy: (x) ->
       origInput = @input
       x.call(this)    
-      return fromIdx: origInput.idx, toIdx: @input.idx
+      return [origInput.idx, @input.idx]
     
     # (mode1, part1, mode2, part2 ..., moden, partn)
     _interleave: (mode1, part1, mode2, part2) -> 
@@ -379,17 +379,9 @@ define ->
       ans = gi._apply(r)
       @.input = gi.input.target
       ans
-
-    # used to replace 'exactly' rules
-    literals: {}
     
     # some useful "derived" rules
     exactly: (wanted) ->
-      if @literals[wanted]
-        return @_apply(@literals[wanted])        
-      @_applyWithArgs("literal", wanted)
-
-    literal: (wanted) ->
       if wanted == @_apply("anything")
         return wanted
       throw @fail

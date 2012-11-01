@@ -17,7 +17,16 @@ define [
           ErrorHandler.bottomErrorArrow handled
     
   preExecute: (code) ->
-    window.OMetaJS = OMetaJS;
+    window.OMetaJS = OMetaJS
+    
+    window.ometaError = (m, i) ->
+      handled = ErrorHandler.handle m, i
+      console.log "Error: "      
+      console.log i
+      "Error at line " + (handled.lineNumber + 1) + "\n" +
+        ErrorHandler.bottomErrorArrow handled
+
+    "ometaError = window.ometaError;" +
 
     "OmetaJS = window.OMetaJS;" +
     "OMeta = OMetaJS.OMeta; " +
@@ -27,6 +36,7 @@ define [
     "escapeChar = OMLib.escapeChar;" +
     "unescape = OMLib.unescape;" +
     "propertyNames = OMLib.propertyNames;" +
+    "Set = OMLib.Set;" +
     "programString = OMLib.programString;" +
     "subclass = OMLib.subclass;" +
     "StringBuffer = OMLib.StringBuffer;" + code
