@@ -2,13 +2,14 @@ require [
   'lib/jquery/jquery.cookie'
   'lib/jquery/jquery.total-storage'  
   'lib/jquery/jquery.animate-colors'
+  'cs!lib/jquery/jquery.repeat'
   'lib/cm/codemirror'
   'cs!compilers/icedcoffeescript/highlighter'
   'compilers/icedcoffeescript/compiler'
   'cs!source/UniqueTimeLine'
   'cs!source/RegexUtil'
   'source/jsDump'
-], (jc_, jac_, jts, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
+], (jc_, jts, jac_, jr_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
   sourceFragment = "try:"
   compiledJS = ''
   compiler = null
@@ -112,16 +113,19 @@ require [
 
           break unless match?
           source = source[match[0].length..]
-          break if source.length == 0  
+          break if source.length == 0
         saveTimeline()
+        outputScrollTop()
       else
         command = compiler.compile source, getCompilerOptions()
         try        
           log execute compiledJS + command
           saveTimeline()
+          outputScrollTop()
         catch error
           showErrorMessage "runtime", "Runtime: " + error
     catch error
+      console.log error
       showErrorMessage "command", "Command Line: " + error.message
 
   modes =
@@ -334,13 +338,16 @@ require [
 
   CodeMirror.commands.doNothing = (cm) -> true
 
+  outputScrollTop = ->
+    $('#rightColumn').animate {scrollTop: 0}, $('#rightColumn').scrollTop() / 10
+
   cmdLineKeyLer = (inst, e) ->
     if e.type == "keyup"
       shouldStop = true
       switch CodeMirror.keyNames[e.keyCode]
         when "Enter"
           compileAndRun()
-          cmdline.setValue ""
+          cmdline.setValue ""          
         when "Up"
           timeline.temp cmdline.getValue() unless timeline.isInPast()
           cmdline.setValue timeline.goBack()
@@ -467,7 +474,7 @@ require [
 
   loadTimeline()
 
-  if timeline.size() < 20
+  if timeline.size() < 10
     cmdline.setValue ":help"
 
   #autosave()
