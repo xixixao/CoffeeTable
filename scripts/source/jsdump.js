@@ -151,6 +151,7 @@ var jsDump;
       'null':'null',
       undefined:'undefined',
       'function':function( fn ){
+        return fn;
         var ret = 'function',
           name = 'name' in fn ? fn.name : (reName.exec(fn)||[])[1];//functions never have name in IE
         if( name )
