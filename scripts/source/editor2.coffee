@@ -8,7 +8,7 @@ require [
     constructor: ->
       Input.initalize()
 
-      Executioner.compiler = IcedCoffeeScript
+      Executioner.compiler = @prepareCompiler IcedCoffeeScript, bare: on
       
       Input.bind "sourceChanged", ->
         @sourceAlreadyCompiled = no
@@ -26,6 +26,10 @@ require [
       unless @sourceAlreadyCompiled
         Executioner.compileSource Input.source
       Executioner.compiledSource
+
+    prepareCompiler: (compiler, options) ->
+      compiler.options: -> $.extend {}, options
+      compiler
 
   # Initialize everything  
   new TeaTable
