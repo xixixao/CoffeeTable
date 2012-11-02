@@ -2,6 +2,7 @@ require [
   'lib/jquery/jquery.cookie'
   'lib/jquery/jquery.total-storage'  
   'lib/jquery/jquery.animate-colors'
+  'lib/jquery/jquery.select-text'
   'cs!lib/jquery/jquery.repeat'
   'lib/cm/codemirror'
   'cs!compilers/icedcoffeescript/highlighter'
@@ -9,7 +10,7 @@ require [
   'cs!source/UniqueTimeLine'
   'cs!source/RegexUtil'
   'source/jsDump'
-], (jc_, jts, jac_, jr_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->          
+], (jc_, jts, jac_, jst_, jr_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->
   sourceFragment = "try:"
   compiledJS = ''
   compiler = null
@@ -37,6 +38,9 @@ require [
 
   eraseMessages = ->
     $('#consoleSpace').empty()
+
+  getMessage = (n) ->
+    $('#consoleSpace pre').eq n
 
   log = (input...) ->  
   #return false for i in input when not (typeof i in ["string", "number", "array", "object"])
@@ -98,6 +102,7 @@ require [
           # Goes through all commands, trying to match command line input
           if sc "dump", "d" then dump()
           else if sc "erase", "e"  then eraseMessages()
+          else if sc "copy", "c"   then selectLastOutput()
           else if sc "link", "l"   then saveToAdress()
           else if sc "toggle", "t" then toggleAutoCompilation()
           else if pc "save"        then switchCurrentCode RegexUtil.param match
@@ -370,6 +375,9 @@ require [
     $('#rightColumn').css "max-height", (winSize.h - 35) + "px"
     setMaxPreWidth $('#consoleSpace pre')    
 
+  selectLastOutput = ->
+    (getMessage 0).selectText()
+
   setMaxPreWidth = ($pre) ->
     $pre.css "max-width", ($(window).width() * 0.5 - 95) + "px"  
 
@@ -387,6 +395,7 @@ require [
 
   erase / e     - Clear all results
   dump / d      - Dump generated javascript
+  copy / c      - Select last output (right-click to copy)
   toggle / t    - Toggle autocompilation
   link / l      - Create a link with current source code
   mode &lt;name>   - Switch to a different compiler
