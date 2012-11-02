@@ -5,8 +5,8 @@
 # - erasing output
 # - displaying help
 # - dumping the compiled source
-define [], (TT) ->
-  
+define [], () ->
+  (TT) ->
 # - erase
 # - help
 # - dump
