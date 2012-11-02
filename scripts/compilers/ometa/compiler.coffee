@@ -21,8 +21,6 @@ define [
     
     window.ometaError = (m, i) ->
       handled = ErrorHandler.handle m, i
-      console.log "Error: "      
-      console.log i
       "Error at line " + (handled.lineNumber + 1) + "\n" +
         ErrorHandler.bottomErrorArrow handled
 
