@@ -1,6 +1,6 @@
 require [
   'lib/jquery/jquery.cookie'
-  'lib/jquery/jquery.total-storage'  
+  'lib/jquery/jquery.total-storage'
   'lib/jquery/jquery.animate-colors'
   'lib/jquery/jquery.select-text'
   'cs!lib/jquery/jquery.repeat'
@@ -10,14 +10,15 @@ require [
   'cs!source/UniqueTimeLine'
   'cs!source/RegexUtil'
   'source/jsDump'
-], (jc_, jts, jac_, jst_, jr_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump) ->
+  'compilers/ometaws/lib/lib/cs/compiler'
+], (jc_, jts, jac_, jst_, jr_, CodeMirror, cmcs_, IcedCoffeeScript, TimeLine, RegexUtil, jsDump, csc) ->
   sourceFragment = "try:"
   compiledJS = ''
   compiler = null
   compilerOptions = null
   sourceCompiled = false
   autoCompile = true
-  lastHit = 0  
+  lastHit = 0
   lastErrorType = ""
   currentMode = ""
 
@@ -42,7 +43,7 @@ require [
   getMessage = (n) ->
     $('#consoleSpace pre').eq n
 
-  log = (input...) ->  
+  log = (input...) ->
   #return false for i in input when not (typeof i in ["string", "number", "array", "object"])
     input = (jsDump.parse i ? "Nothing" for i in input)
     message = input.join ", "
@@ -78,8 +79,8 @@ require [
   dump = ->
     compileCode() unless sourceCompiled
     if compiledJS
-      log compiledJS 
-    else 
+      log compiledJS
+    else
       showErrorMessage "compiler", "Fix: '#{currentMessage()}' first"
 
   compileAndRun = ->
@@ -123,7 +124,7 @@ require [
         outputScrollTop()
       else
         command = compiler.compile source, getCompilerOptions()
-        try        
+        try
           log execute compiledJS + command
           saveTimeline()
           outputScrollTop()
@@ -134,16 +135,16 @@ require [
       showErrorMessage "command", "Command Line: " + error.message
 
   modes =
-    CoffeeScript: 
-      id: "coffeescript"  
+    CoffeeScript:
+      id: "coffeescript"
       highlighter: "cs"
       options:
         bare: on
-    IcedCoffeeScript: 
-      id: "icedcoffeescript" 
+    IcedCoffeeScript:
+      id: "icedcoffeescript"
       highlighter: "cs"
       options:
-        bare: on 
+        bare: on
     OmetaJS:
       id: "ometajs"
       compiler: "cs"
@@ -155,21 +156,26 @@ require [
     Ometa:
       id: "ometa"
       compiler: "cs"
+    OmetaWS:
+      id: "ometaws"
+      compiler: "cs"
 
   modesList = ->
     output = ""
-    for name of modes      
+    for name of modes
       output += "#{name}\n"
     output
 
   displayModes = ->
-    log modesList()    
+    log modesList()
 
-  setNewMode = (name) ->
-    unless name is currentMode
-      setMode name
+  setNewMode = (name, callback) ->
+    if name isnt currentMode
+      setMode name, callback
+    else
+      callback?()
 
-  setMode = (name) ->
+  setMode = (name, callback) ->
     mode = modes[name]
     if mode?
       id = mode.id
@@ -183,20 +189,21 @@ require [
         compilerOptions = mode.options
         editor.setOption "mode", id
         cmdline.setOption "mode", id
-        mode.init?()        
+        mode.init?()
         log "#{name} compiler loaded"
         currentMode = name
         compileCode()
+        callback?()
       , (error) ->
         log "#{name} loading failed"
     else
       log "Wrong mode name, choose from:\n\n" + modesList()
 
   toggleAutoCompilation = ->
-    autoCompile = not autoCompile    
+    autoCompile = not autoCompile
     log "Autocompilation switched " + if autoCompile then "on" else "off"
 
-  getCompilerOptions = -> 
+  getCompilerOptions = ->
     $.extend {}, compilerOptions
 
   compileCode = ->
@@ -212,7 +219,7 @@ require [
       indicateBy normalColor
 
   # Set up the compilation function, to run when you stop typing.
-  compileSource = (start, finish) ->  
+  compileSource = (start, finish) ->
     start()
     source = editor.getValue()
     compiledJS = ''
@@ -221,8 +228,7 @@ require [
       compiledJS = compiler.compile source, getCompilerOptions()
       hideError "compiler", "runtime"
     catch error
-      #log "compiler error", error
-      showErrorMessage "compiler", "Compiler: " + error.message
+      showErrorMessage "compiler", "Compiler: " + (error.message ? error)
     sourceCompiled = true
     finish()
 
@@ -258,7 +264,7 @@ require [
     return
 
 
-  fileCookie = (name, value) ->    
+  fileCookie = (name, value) ->
     $.totalStorage cookieFilePrefix + name, value
 
   saveCurrent = ->
@@ -274,7 +280,7 @@ require [
     $.totalStorage TIMELINE_COOKIE, timeline.newest(200)
 
   loadTimeline = ->
-    timeline.from ($.totalStorage TIMELINE_COOKIE) ? []    
+    timeline.from ($.totalStorage TIMELINE_COOKIE) ? []
 
   removeFromClient = (name) ->
     return unless name?
@@ -295,17 +301,17 @@ require [
     #console.log "changed #{exclude} saving " + table
     $.totalStorage BROWSE_COOKIE, table
 
-  loadFromClient = (name) ->    
+  loadFromClient = (name) ->
     name = $.totalStorage LAST_CODE unless name?
     return unless name?
     #console.log "loading " + name + " is " + $.totalStorage name
     stored = fileCookie name
     if stored?
       saveName = name
-      {source, mode} = stored      
-      setNewMode mode
+      {source, mode} = stored
       editor.setValue source
-      showFileMessage "#{saveName} loaded" if saveName != UNNAMED_CODE
+      setNewMode mode, ->
+        showFileMessage "#{saveName} loaded" if saveName != UNNAMED_CODE
     else
       showFileMessage "There is no #{name}" if name != UNNAMED_CODE
 
@@ -324,7 +330,7 @@ require [
   displayClient = ->
     table = $.totalStorage BROWSE_COOKIE
     output = ""
-    if table? and table.length > 0            
+    if table? and table.length > 0
       for snippet in table.split ";"
         [name, lines] = snippet.split ","
         output += "#{name}, lines: #{lines}\n" unless name == UNNAMED_CODE
@@ -352,7 +358,7 @@ require [
       switch CodeMirror.keyNames[e.keyCode]
         when "Enter"
           compileAndRun()
-          cmdline.setValue ""          
+          cmdline.setValue ""
         when "Up"
           timeline.temp cmdline.getValue() unless timeline.isInPast()
           cmdline.setValue timeline.goBack()
@@ -363,7 +369,7 @@ require [
         else
           shouldStop = false
       e.stop() if shouldStop
-  
+
 
   resizeEditor = (e) ->
     winSize = w: $(window).width(), h: $(window).height()
@@ -373,17 +379,17 @@ require [
     $('#rightColumn').css "left", (column) + "px"
     $('#rightColumn').css "width", (column - 35) + "px"
     $('#rightColumn').css "max-height", (winSize.h - 35) + "px"
-    setMaxPreWidth $('#consoleSpace pre')    
+    setMaxPreWidth $('#consoleSpace pre')
 
   selectLastOutput = ->
     (getMessage 0).selectText()
 
   setMaxPreWidth = ($pre) ->
-    $pre.css "max-width", ($(window).width() * 0.5 - 95) + "px"  
+    $pre.css "max-width", ($(window).width() * 0.5 - 95) + "px"
 
     # Load the editor with a string of CoffeeScript.
   loadWith = (coffee) ->
-    editor.setValue(editor.getValue() + coffee)        
+    editor.setValue(editor.getValue() + coffee)
 
   saveToAdress = () ->
     source = editor.getValue()
@@ -409,12 +415,12 @@ require [
   Name with arbitrary characters (spaces) must be closed by \\
   save Long file name.txt\\
   """
-  
-  
+
+
   # Initialize CodeMirror
   # ---------------------
 
-  # References to active line  
+  # References to active line
 
   hlLine = null
 
