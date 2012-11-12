@@ -484,6 +484,8 @@ require [
   if hash.indexOf(sourceFragment) == 0
     src = hash.substr sourceFragment.length
     loadWith src
+    window.location.hash = ""
+    log "File loaded from URI, use the link command to generate new link."
   else
     loadFromClient()
 
