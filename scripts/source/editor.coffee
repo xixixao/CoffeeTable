@@ -490,7 +490,7 @@ require [
   loadTimeline()
 
   if timeline.size() < 10
-    cmdline.setValue ":help"
+    log helpDescription
 
   #autosave()
   #compileCode()
