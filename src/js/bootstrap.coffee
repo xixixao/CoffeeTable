@@ -2,8 +2,6 @@
 require
   urlArgs: "b=#{(new Date()).getTime()}"
   paths:
-    hyper: 'vendor/hyper/hyper'
-    React: 'vendor/react/react'
     compilers: 'app/compilers'
     ace: 'vendor/ace/ace'
     jqueryLibs: 'vendor/jquery'
